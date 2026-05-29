@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>탁구 아카데미 | Table Tennis LMS</title>
+  <style>
+    :root {
+      --red: #e50914;
+      --dark: #141414;
+      --card-bg: #1a1a1a;
+      --text: #e5e5e5;
+      --muted: #808080;
+      --hover-scale: 1.08;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 0 4%;
+      height: 68px;
+      background: linear-gradient(to bottom, rgba(0,0,0,.9) 0%, transparent 100%);
+      transition: background .3s;
+    }
+    nav.scrolled { background: rgba(0,0,0,.95); }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .logo span { color: #fff; }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.4rem;
+    }
+    nav ul li a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: .9rem;
+      transition: color .2s;
+    }
+    nav ul li a:hover, nav ul li a.active { color: #fff; }
+
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .nav-right .search-icon,
+    .nav-right .bell-icon {
+      font-size: 1.2rem;
+      cursor: pointer;
+      opacity: .8;
+      transition: opacity .2s;
+    }
+    .nav-right .search-icon:hover,
+    .nav-right .bell-icon:hover { opacity: 1; }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 4px;
+      background: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem;
+      cursor: pointer;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      height: 80vh;
+      min-height: 480px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 4% 8%;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://img.youtube.com/vi/aSKNla7omVY/maxresdefault.jpg') center/cover no-repeat;
+      filter: brightness(.55);
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(20,20,20,0) 40%,
+        rgba(20,20,20,.8) 80%,
+        rgba(20,20,20,1) 100%
+      );
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 540px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: var(--red);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: .25rem .7rem;
+      border-radius: 3px;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: .8rem;
+      text-shadow: 2px 2px 8px rgba(0,0,0,.6);
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: .9rem;
+      color: #aaa;
+    }
+    .hero-meta .match { color: #46d369; font-weight: 700; }
+
+    .hero-desc {
+      font-size: .95rem;
+      line-height: 1.6;
+      color: #ccc;
+      margin-bottom: 1.6rem;
+      max-width: 420px;
+    }
+
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .7rem 1.8rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+    .btn-play {
+      background: #fff;
+      color: #000;
+    }
+    .btn-play:hover { background: rgba(255,255,255,.85); }
+
+    .btn-info {
+      background: rgba(109,109,110,.7);
+      color: #fff;
+    }
+    .btn-info:hover { background: rgba(109,109,110,.5); }
+
+    /* ── ROWS ── */
+    .content { padding: 0 4% 4rem; }
+
+    .row { margin-bottom: 3rem; }
+
+    .row-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .row-title span { color: var(--red); font-size: .85rem; font-weight: 600; cursor: pointer; opacity: 0; transition: opacity .2s; }
+    .row:hover .row-title span { opacity: 1; }
+
+    /* ── CARDS ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+    }
+
+    .card {
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .3s ease, box-shadow .3s ease, z-index 0s .3s;
+      background: var(--card-bg);
+    }
+
+    .card:hover {
+      transform: scale(var(--hover-scale));
+      box-shadow: 0 12px 40px rgba(0,0,0,.7);
+      z-index: 10;
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .card-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+    }
+
+    .card-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .3s;
+    }
+    .card:hover .card-thumb img { transform: scale(1.04); }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .card:hover .play-overlay { opacity: 1; }
+
+    .play-overlay svg {
+      width: 52px; height: 52px;
+      fill: #fff;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,.8));
+    }
+
+    .card-body {
+      padding: .75rem 1rem 1rem;
+      background: #1f1f1f;
+      transform: translateY(100%);
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      transition: transform .3s ease;
+    }
+    .card:hover .card-body { transform: translateY(0); }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: .6rem;
+    }
+
+    .card-actions button {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      transition: all .15s;
+    }
+    .btn-play-sm { background: #fff; color: #000; }
+    .btn-play-sm:hover { background: #ccc; }
+
+    .btn-add { background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.5) !important; }
+    .btn-add:hover { border-color: #fff !important; background: rgba(255,255,255,.25); }
+
+    .btn-like { background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.5) !important; }
+    .btn-like:hover { border-color: #fff !important; }
+
+    .btn-chevron {
+      margin-left: auto;
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,.5) !important;
+    }
+    .btn-chevron:hover { border-color: #fff !important; }
+
+    .card-title-sm {
+      font-size: .85rem;
+      font-weight: 700;
+      margin-bottom: .3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      margin-bottom: .3rem;
+    }
+    .tag {
+      font-size: .72rem;
+      color: #aaa;
+    }
+    .tag-dot { color: #46d369; font-weight: 700; }
+
+    .card-genre {
+      font-size: .72rem;
+      color: #aaa;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(255,255,255,.2);
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--red);
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: #181818;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,.9);
+      animation: modalIn .25s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.95) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #2a2a2a;
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: #3a3a3a; }
+
+    .modal-video {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+    }
+    .modal-video iframe {
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .modal-info {
+      padding: 1.8rem 2rem 2rem;
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-left { flex: 1; }
+
+    .modal-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: .7rem;
+    }
+
+    .modal-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .modal-match { color: #46d369; font-weight: 700; }
+    .modal-year { color: #aaa; }
+    .modal-level {
+      border: 1px solid #aaa;
+      color: #aaa;
+      padding: 0 .4rem;
+      font-size: .78rem;
+      border-radius: 3px;
+    }
+
+    .modal-desc {
+      font-size: .95rem;
+      line-height: 1.7;
+      color: #ccc;
+    }
+
+    .modal-right {
+      min-width: 220px;
+      font-size: .88rem;
+      line-height: 2;
+      color: #aaa;
+    }
+    .modal-right strong { color: var(--text); }
+
+    .modal-btn-row {
+      display: flex;
+      gap: .8rem;
+      margin-top: 1.2rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 3rem 4%;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 2;
+    }
+    footer .footer-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: .2rem;
+      margin-bottom: 1.5rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .modal-top { flex-direction: column; }
+      .modal-right { min-width: unset; }
+      nav ul { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="logo">🏓 PING<span>FLIX</span></div>
+  <ul>
+    <li><a href="#" class="active">홈</a></li>
+    <li><a href="#">기술 강좌</a></li>
+    <li><a href="#">선수 분석</a></li>
+    <li><a href="#">토너먼트</a></li>
+    <li><a href="#">내 목록</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="search-icon">🔍</span>
+    <span class="bell-icon">🔔</span>
+    <div class="avatar">탁</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🏆 이번 주 추천</div>
+    <h1 class="hero-title">세계 최고의 탁구 선수들</h1>
+    <div class="hero-meta">
+      <span class="match">97% 일치</span>
+      <span>2024</span>
+      <span>HD</span>
+      <span>전체관람가</span>
+    </div>
+    <p class="hero-desc">세계 정상급 탁구 선수들의 경기 영상을 통해 최고의 기술과 전략을 분석합니다. 스매시, 스핀, 풋워크까지 전문가의 플레이를 생생하게 배워보세요.</p>
+    <div class="hero-btns">
+      <button class="btn btn-play" onclick="openModal(0)">▶ 지금 재생</button>
+      <button class="btn btn-info" onclick="openModal(0)">ℹ 상세 정보</button>
+    </div>
+  </div>
+</section>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- Row 1 -->
+  <div class="row">
+    <div class="row-title">🔥 인기 강의 <span>모두 보기 ›</span></div>
+    <div class="cards-grid" id="main-grid"></div>
+  </div>
+
+  <!-- Row 2 (same videos, different label to show category feel) -->
+  <div class="row">
+    <div class="row-title">⭐ 내가 찜한 영상 <span>모두 보기 ›</span></div>
+    <div class="cards-grid" id="fav-grid"></div>
+  </div>
+
+</div>
+
+<!-- 미리 로드된 플레이어 (숨김) -->
+<div id="preload-players" style="display:none;"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="handleBackdropClick(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-video" id="modal-video-slot">
+      <!-- iframe이 여기로 이동됨 -->
+    </div>
+    <div class="modal-info">
+      <div class="modal-top">
+        <div class="modal-left">
+          <div class="modal-title" id="modal-title"></div>
+          <div class="modal-meta">
+            <span class="modal-match" id="modal-match"></span>
+            <span class="modal-year" id="modal-year"></span>
+            <span class="modal-level" id="modal-level"></span>
+          </div>
+          <div class="modal-desc" id="modal-desc"></div>
+          <div class="modal-btn-row">
+            <button class="btn btn-play" id="modal-play-btn">▶ 재생</button>
+            <button class="btn btn-info" style="font-size:.85rem;padding:.6rem 1.2rem;">+ 내 목록</button>
+          </div>
+        </div>
+        <div class="modal-right" id="modal-right"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="#">자주 묻는 질문</a>
+    <a href="#">개인정보 처리방침</a>
+    <a href="#">서비스 약관</a>
+    <a href="#">고객센터</a>
+    <a href="#">쿠키 설정</a>
+    <a href="#">회사 정보</a>
+    <a href="#">법적 고지</a>
+    <a href="#">사이트맵</a>
+  </div>
+  <p>© 2024 PINGFLIX — 탁구 학습 플랫폼. All rights reserved.</p>
+</footer>
+
+<script>
+  /* ── 영상 데이터 ── */
+  const videos = [
+    {
+      id: 'aSKNla7omVY',
+      title: '세계 챔피언의 스매시 기술',
+      desc: '세계 탁구 챔피언이 직접 선보이는 강력한 스매시 기술을 분석합니다. 타이밍, 자세, 힘의 배분 등 핵심 포인트를 단계별로 확인하세요.',
+      match: '98%',
+      year: '2024',
+      level: '고급',
+      tags: ['스매시', '공격 기술', '경기 분석'],
+      instructor: '세계랭킹 1위 선수',
+      duration: '15분',
+      progress: 65,
+    },
+    {
+      id: 'XhWvol3nEV8',
+      title: '프로 선수 경기 완전 분석',
+      desc: '국제 대회에서 펼쳐진 최정상급 선수의 경기를 낱낱이 분석합니다. 서브 전략, 리시브, 랠리 운용 능력까지 전술적 사고를 배울 수 있습니다.',
+      match: '95%',
+      year: '2024',
+      level: '중·고급',
+      tags: ['전술', '경기 영상', '서브'],
+      instructor: '탁구 전문 코치',
+      duration: '22분',
+      progress: 30,
+    },
+    {
+      id: 'Ik9YUq0zFqY',
+      title: '스핀 마스터 — 회전의 모든 것',
+      desc: '탁구에서 가장 중요한 요소 중 하나인 스핀(회전)의 원리와 응용을 완벽하게 마스터합니다. 톱스핀, 백스핀, 사이드스핀의 차이와 활용법을 배웁니다.',
+      match: '92%',
+      year: '2023',
+      level: '중급',
+      tags: ['스핀', '기초-심화', '드라이브'],
+      instructor: '올림픽 메달리스트',
+      duration: '18분',
+      progress: 0,
+    },
+  ];
+
+  function thumbUrl(id) {
+    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+  }
+
+  /* ── iframe 미리 생성 (페이지 로드 시 한 번만) ── */
+  const preloadContainer = document.getElementById('preload-players');
+  const iframeMap = {};   // index → iframe element
+
+  videos.forEach((v, i) => {
+    const iframe = document.createElement('iframe');
+    iframe.id = `yt-player-${i}`;
+    iframe.src = `https://www.youtube.com/embed/${v.id}?enablejsapi=1&rel=0&origin=${location.origin}`;
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('allow', 'autoplay; encrypted-media');
+    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+    preloadContainer.appendChild(iframe);
+    iframeMap[i] = iframe;
+  });
+
+  function ytCommand(iframe, func) {
+    iframe.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func, args: [] }),
+      '*'
+    );
+  }
+
+  /* ── 카드 생성 ── */
+  function createCard(v, index) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-thumb">
+        <img src="${thumbUrl(v.id)}" alt="${v.title}"
+             onerror="this.src='https://img.youtube.com/vi/${v.id}/hqdefault.jpg'" />
+        <div class="play-overlay">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        ${v.progress > 0 ? `<div class="progress-wrap"><div class="progress-bar" style="width:${v.progress}%"></div></div>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-actions">
+          <button class="btn-play-sm card-actions button" title="재생">▶</button>
+          <button class="btn-add card-actions button" title="내 목록에 추가">+</button>
+          <button class="btn-like card-actions button" title="좋아요">👍</button>
+          <button class="btn-chevron card-actions button" title="상세 정보">⌄</button>
+        </div>
+        <div class="card-title-sm">${v.title}</div>
+        <div class="card-tags">
+          <span class="tag tag-dot">● ${v.match} 일치</span>
+          <span class="tag">· ${v.year}</span>
+          <span class="tag">· ${v.level}</span>
+        </div>
+        <div class="card-genre">${v.tags.join(' · ')}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => openModal(index));
+    return card;
+  }
+
+  function renderGrid(containerId, indices) {
+    const container = document.getElementById(containerId);
+    indices.forEach(i => container.appendChild(createCard(videos[i], i)));
+  }
+
+  renderGrid('main-grid', [0, 1, 2]);
+  renderGrid('fav-grid',  [1, 2, 0]);
+
+  /* ── 모달 ── */
+  let currentVideoIndex = null;
+
+  function openModal(index) {
+    const v = videos[index];
+
+    // 이전 영상 일시정지 후 preload 컨테이너로 복귀
+    if (currentVideoIndex !== null && currentVideoIndex !== index) {
+      const prev = iframeMap[currentVideoIndex];
+      ytCommand(prev, 'pauseVideo');
+      preloadContainer.appendChild(prev);
+    }
+
+    currentVideoIndex = index;
+
+    // 텍스트 정보 업데이트
+    document.getElementById('modal-title').textContent = v.title;
+    document.getElementById('modal-match').textContent = v.match + ' 일치';
+    document.getElementById('modal-year').textContent = v.year;
+    document.getElementById('modal-level').textContent = v.level;
+    document.getElementById('modal-desc').textContent = v.desc;
+    document.getElementById('modal-right').innerHTML = `
+      <div><strong>태그:</strong> ${v.tags.join(', ')}</div>
+      <div><strong>강사:</strong> ${v.instructor}</div>
+      <div><strong>재생 시간:</strong> ${v.duration}</div>
+      ${v.progress > 0 ? `<div><strong>진행률:</strong> ${v.progress}%</div>` : ''}
+    `;
+
+    // 미리 로드된 iframe을 모달 슬롯으로 이동 후 재생
+    const slot = document.getElementById('modal-video-slot');
+    slot.appendChild(iframeMap[index]);
+    ytCommand(iframeMap[index], 'playVideo');
+
+    document.getElementById('modal-play-btn').onclick = () => ytCommand(iframeMap[index], 'playVideo');
+
+    document.getElementById('modal-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    if (currentVideoIndex !== null) {
+      ytCommand(iframeMap[currentVideoIndex], 'pauseVideo');
+      preloadContainer.appendChild(iframeMap[currentVideoIndex]);
+    }
+    document.getElementById('modal-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target === document.getElementById('modal-backdrop')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ── Nav 스크롤 효과 ── */
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+</script>
+</body>
+</html>
